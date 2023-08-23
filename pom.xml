@@ -21,6 +21,7 @@ under the License.
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
+    <?m2e execute onConfiguration,onIncremental?>
     <groupId>org.apache.maven.extensions</groupId>
     <artifactId>maven-extensions</artifactId>
     <version>41</version>
@@ -60,6 +61,7 @@ under the License.
 
   <properties>
     <project.build.outputTimestamp>2023-11-27T01:58:16Z</project.build.outputTimestamp>
+    <spotless.action>apply</spotless.action>
     <javaVersion>8</javaVersion>
     <minimalMavenBuildVersion>3.9.0</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>11</minimalJavaBuildVersion>
@@ -67,6 +69,7 @@ under the License.
 
     <!-- default maven version, will be overridden by maven3 profile -->
     <mavenVersion>4.0.0-alpha-8</mavenVersion>
+    <sisuVersion>0.9.0.M2</sisuVersion>
     <maven.dir>maven4</maven.dir>
     <maven.basedir>${project.build.directory}/${maven.dir}</maven.basedir>
 
@@ -104,6 +107,18 @@ under the License.
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven</artifactId>
+        <version>${mavenVersion}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-classworlds</artifactId>
+        <version>2.7.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -111,7 +126,6 @@ under the License.
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>${mavenVersion}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -123,7 +137,6 @@ under the License.
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-http</artifactId>
-      <version>${resolverVersion}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -144,17 +157,14 @@ under the License.
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.15.1</version>
     </dependency>
     <dependency>
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
-      <version>1.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>${plexusUtilsVersion}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -181,7 +191,6 @@ under the License.
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
-      <version>${mavenVersion}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -272,6 +281,7 @@ under the License.
   </dependencies>
 
   <build>
+
     <pluginManagement>
       <plugins>
         <plugin>
@@ -279,6 +289,8 @@ under the License.
           <artifactId>maven-compiler-plugin</artifactId>
           <configuration>
             <release>${javaVersion}</release>
+            <generatedSourcesDirectory default-value="${project.build.directory}/generated-sources/annotations" />
+            <generatedTestSourcesDirectory default-value="${project.build.directory}/generated-test-sources/annotations" />
           </configuration>
         </plugin>
         <plugin>
@@ -314,6 +326,9 @@ under the License.
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
             <excludes>
+              <exclude>${project.build.directory}</exclude>
+              <exclude>target~*/**</exclude>
+              <exclude>.mvn/wrapper/maven-wrapper.jar</exclude>
               <exclude>.mvn/maven.config</exclude>
               <exclude>.asf.yaml</exclude>
               <exclude>src/test/resources*/**</exclude>
@@ -323,6 +338,31 @@ under the License.
               <exclude>.gitmodules</exclude>
               <exclude>.gitattributes</exclude>
             </excludes>
+          </configuration>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <versionRange>[2.28.0,)</versionRange>
+                    <goals>
+                      <goal>apply</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
           </configuration>
         </plugin>
       </plugins>
@@ -342,6 +382,7 @@ under the License.
         </configuration>
         <executions>
           <execution>
+            <?m2e execute onConfiguration,onIncremental?>
             <id>modello-cache</id>
             <goals>
               <goal>java</goal>
@@ -351,13 +392,14 @@ under the License.
             <phase>generate-sources</phase>
           </execution>
           <execution>
+            <?m2e execute onConfiguration,onIncremental?>
             <id>modello-cache-xsd</id>
             <goals>
               <goal>xsd</goal>
             </goals>
             <phase>generate-resources</phase>
             <configuration>
-              <outputDirectory>${basedir}/target/generated-resources/modello</outputDirectory>
+              <outputDirectory>${project.build.directory}/generated-resources/modello</outputDirectory>
             </configuration>
           </execution>
           <execution>
@@ -384,9 +426,21 @@ under the License.
             <configuration>
               <resources>
                 <resource>
-                  <directory>${basedir}/target/generated-resources/modello</directory>
+                  <directory>${project.build.directory}/generated-resources/modello</directory>
                 </resource>
               </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-sources</id>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/modello</source>
+              </sources>
             </configuration>
           </execution>
         </executions>
@@ -419,6 +473,7 @@ under the License.
         </executions>
       </plugin>
     </plugins>
+
   </build>
 
   <profiles>
@@ -456,9 +511,18 @@ under the License.
     <profile>
       <id>maven3</id>
       <properties>
-        <mavenVersion>3.9.5</mavenVersion>
+        <mavenVersion>3.9.6</mavenVersion>
         <maven.dir>maven3</maven.dir>
         <maven.basedir>${project.build.directory}/${maven.dir}</maven.basedir>
+      </properties>
+    </profile>
+    <profile>
+      <id>m2e-annotations</id>
+      <properties>
+        <profile.provides>m2e-annotations</profile.provides>
+        <profile.depends>m2e</profile.depends>
+        <!-- activate profile m2e-auto-value-apt -->
+        <auto-value.version>1.10.1</auto-value.version>
       </properties>
     </profile>
   </profiles>

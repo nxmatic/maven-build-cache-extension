@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Attach to Remote Program",
+            "request": "attach",
+            "hostName": "localhost",
+            "projectName": "maven-build-cache-extension",
+            "port": "8000"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "PerfTest",
+            "request": "launch",
+            "mainClass": "org.apache.maven.buildcache.hash.PerfTest",
+            "projectName": "maven-build-cache-extension"
+        }
+    ]
+}
