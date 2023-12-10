@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -43,6 +44,7 @@ import org.apache.maven.buildcache.xml.build.Scm;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.SessionData;
 import org.slf4j.Logger;
@@ -209,5 +211,13 @@ public class CacheUtils {
                 logger.debug("{} {} of {} : {}", elementCaption, i, size, value);
             }
         }
+    }
+
+    public static String fullGoalName(MojoExecution mojoExecution) {
+        return Optional.ofNullable(mojoExecution.getMojoDescriptor())
+                .map(MojoDescriptor::getFullGoalName)
+                .orElseGet(() -> {
+                    return mojoExecution.getPlugin() + ":" + mojoExecution.getGoal();
+                });
     }
 }

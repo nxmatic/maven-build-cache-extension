@@ -685,8 +685,41 @@ public class MavenProjectInput {
         final Artifact resolved = result.getArtifacts().iterator().next();
 
         final HashAlgorithm algorithm = config.getHashFactory().createAlgorithm();
-        final String hash = algorithm.hash(resolved.getFile().toPath());
+        final String hash = algorithm.hash(resolvedFilePath(resolved));
         return DtoUtils.createDigestedFile(resolved, hash);
+    }
+
+    private Path resolvedFilePath(Artifact resolved) {
+        File file = resolved.getFile();
+
+        if (file.isDirectory()) {
+            file = resolvedFile(resolved);
+            if (!file.exists()) {
+                if ("jar".equals(resolved.getType())) {
+                    file = resolvedFile(resolved, "zip");
+                }
+            }
+        }
+
+        return file.toPath();
+    }
+
+    private File resolvedFile(Artifact resolved) {
+        return resolvedFile(resolved, resolved.getType());
+    }
+
+    private File resolvedFile(Artifact resolved, String type) {
+        return resolved.getFile()
+                .getParentFile()
+                .toPath()
+                .resolve(new StringBuilder()
+                        .append(resolved.getArtifactId())
+                        .append("-")
+                        .append(resolved.getVersion())
+                        .append(".")
+                        .append(resolved.getType())
+                        .toString())
+                .toFile();
     }
 
     /**
