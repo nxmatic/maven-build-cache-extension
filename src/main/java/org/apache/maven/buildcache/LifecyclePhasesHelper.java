@@ -26,6 +26,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import org.apache.maven.SessionScoped;
 import org.apache.maven.buildcache.xml.Build;
 import org.apache.maven.execution.AbstractExecutionListener;
 import org.apache.maven.execution.ExecutionEvent;
+import org.apache.maven.execution.ExecutionListener;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.lifecycle.DefaultLifecycles;
@@ -70,7 +72,8 @@ public class LifecyclePhasesHelper extends AbstractExecutionListener {
     @PostConstruct
     public void init() {
         MavenExecutionRequest request = session.getRequest();
-        ChainedListener lifecycleListener = new ChainedListener(request.getExecutionListener());
+        Optional<ExecutionListener> listener = Optional.ofNullable(request.getExecutionListener());
+        ChainedListener lifecycleListener = new ChainedListener(listener.orElseGet(AbstractExecutionListener::new));
         lifecycleListener.chainListener(this);
         request.setExecutionListener(lifecycleListener);
     }
